@@ -7,7 +7,7 @@ from rest_framework.test import APITestCase
 from auth_app.models import UserProfile
 
 
-class TestRegistrationAPI(APITestCase):
+class RegistrationAPITest(APITestCase):
 
     def setUp(self):
         self.url = reverse("registration")
