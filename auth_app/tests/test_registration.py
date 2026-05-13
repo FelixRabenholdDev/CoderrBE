@@ -4,9 +4,6 @@ from django.contrib.auth.models import User
 from rest_framework import status
 from rest_framework.test import APITestCase
 
-from auth_app.models import UserProfile
-
-
 class RegistrationAPITest(APITestCase):
 
     def setUp(self):
@@ -19,7 +16,7 @@ class RegistrationAPITest(APITestCase):
             "type": "customer",
         }
     
-#---Happy Path 201---
+#--- 201 Happy Path ---
 
     def test_registration_returns_201_on_success(self):
         response = self.client.post(self.url, self.valid_payload, format="json")
@@ -54,7 +51,7 @@ class RegistrationAPITest(APITestCase):
         user = User.objects.get(username="bizuser")
         self.assertEqual(user.profile.type, "business")
 
-#---Unhappy Path 400---
+#--- 400 Unhappy Path ---
 
     def test_registration_fails_if_passwords_dont_match(self):
         payload = {**self.valid_payload, "repeated_password": "wrongPassword"}

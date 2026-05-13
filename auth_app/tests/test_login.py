@@ -19,7 +19,7 @@ class LoginAPITest(APITestCase):
             "password": "securePassword123",
         }
 
-    #--- Happy Path 200---
+    #--- 200 Happy Path ---
 
     def test_login_returns_200_on_success(self):
         response = self.client.post(self.url, self.valid_payload, format="json")
@@ -44,7 +44,7 @@ class LoginAPITest(APITestCase):
         response = self.client.post(self.url, self.valid_payload, format="json")
         self.assertEqual(response.data["token"], token.key)
 
-    # --- Validierungsfehler 400---
+    # --- 400 Validation error ---
 
     def test_login_fails_if_password_wrong(self):
         payload = {**self.valid_payload, "password": "wrongPassword"}

@@ -3,7 +3,7 @@ from django.contrib.auth import authenticate
 
 from rest_framework import serializers
 
-from auth_app.models import UserProfile
+from profiles_app.models import UserProfile
 
 
 class RegistrationSerializer(serializers.ModelSerializer):
