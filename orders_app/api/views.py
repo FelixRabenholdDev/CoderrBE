@@ -1,7 +1,6 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from rest_framework.permissions import IsAuthenticated
 from django.contrib.auth.models import User
 from django.db.models import Q
 
@@ -12,7 +11,6 @@ from profiles_app.models import UserProfile
 
 
 class OrdersListView(APIView):
-    permission_classes = [IsAuthenticated]
 
     def get(self, request):
         orders = Order.objects.filter(
@@ -56,7 +54,6 @@ class OrdersListView(APIView):
 
 
 class OrderDetailView(APIView):
-    permission_classes = [IsAuthenticated]
 
     def get_order(self, pk):
         try:
@@ -98,7 +95,6 @@ class OrderDetailView(APIView):
 
 
 class OrderCountView(APIView):
-    permission_classes = [IsAuthenticated]
 
     def get(self, request, business_user_id):
         try:
@@ -111,7 +107,6 @@ class OrderCountView(APIView):
 
 
 class CompletedOrderCountView(APIView):
-    permission_classes = [IsAuthenticated]
 
     def get(self, request, business_user_id):
         try:

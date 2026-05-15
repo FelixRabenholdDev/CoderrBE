@@ -5,11 +5,7 @@ from rest_framework.permissions import IsAuthenticated, AllowAny
 from django.db.models import Min, Q
 
 from offers_app.models import Offer, OfferDetail
-from .serializers import (
-    OfferListSerializer, OfferCreateSerializer,
-    OfferRetrieveSerializer, OfferPatchSerializer,
-    OfferDetailSerializer,
-)
+from .serializers import (OfferListSerializer, OfferCreateSerializer, OfferRetrieveSerializer, OfferPatchSerializer, OfferDetailSerializer,)
 from profiles_app.models import UserProfile
 
 
@@ -77,7 +73,6 @@ class OffersListView(APIView):
 
 
 class OfferDetailView(APIView):
-    permission_classes = [IsAuthenticated]
 
     def get_offer(self, pk):
         try:
@@ -115,7 +110,6 @@ class OfferDetailView(APIView):
 
 
 class OfferDetailItemView(APIView):
-    permission_classes = [IsAuthenticated]
 
     def get(self, request, pk):
         try:

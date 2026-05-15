@@ -1,7 +1,6 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from rest_framework.permissions import IsAuthenticated
 
 from reviews_app.models import Review
 from .serializers import ReviewSerializer, ReviewPatchSerializer
@@ -9,7 +8,6 @@ from profiles_app.models import UserProfile
 
 
 class ReviewsListView(APIView):
-    permission_classes = [IsAuthenticated]
 
     def get(self, request):
         queryset = Review.objects.all()
@@ -59,7 +57,6 @@ class ReviewsListView(APIView):
 
 
 class ReviewDetailView(APIView):
-    permission_classes = [IsAuthenticated]
 
     def get_review(self, pk):
         try:
