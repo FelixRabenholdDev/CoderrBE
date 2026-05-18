@@ -55,7 +55,19 @@ class ReviewsListView(APIView):
             Response:
                 Created review or error message.
         """
-        business_user_id = request.data.get("business_user")
+
+        serializer = ReviewSerializer(data=request.data)
+
+        if not serializer.is_valid():
+            return Response(
+                serializer.errors,
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        
+        business_user_id = request.data.get(
+            "business_user"
+        )
+
         if Review.objects.filter(
             reviewer=request.user,
             business_user__id=business_user_id,
@@ -65,12 +77,12 @@ class ReviewsListView(APIView):
                 status=status.HTTP_403_FORBIDDEN,
             )
 
-        serializer = ReviewSerializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save(reviewer=request.user)
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
+        serializer.save(reviewer=request.user)
+        
+        return Response(
+            serializer.data, 
+            status=status.HTTP_201_CREATED,
+        )
 
 class ReviewDetailView(APIView):
     """
