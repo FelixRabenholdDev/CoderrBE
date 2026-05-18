@@ -4,6 +4,10 @@ Database model for user reviews.
 
 from django.contrib.auth.models import User
 from django.db import models
+from django.core.validators import (
+    MinValueValidator,
+    MaxValueValidator,
+)
 
 
 class Review(models.Model):
@@ -24,7 +28,12 @@ class Review(models.Model):
         related_name="reviews_given",
     )
 
-    rating = models.IntegerField()
+    rating = models.IntegerField(
+        validators=[
+            MinValueValidator(1),
+            MaxValueValidator(5),
+        ]
+    )
 
     description = models.TextField(
         blank=True,
