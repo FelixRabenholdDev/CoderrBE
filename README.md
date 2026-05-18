@@ -460,11 +460,3 @@ chmod +x manage.py
 3. Run tests to ensure coverage
 4. Make commits with clear messages
 5. Push changes and create a pull request
-
-## License
-
-Specify your license here if applicable.
-
-## Contact
-
-For questions or issues, contact the development team.
