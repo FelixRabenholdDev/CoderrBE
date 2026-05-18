@@ -1,17 +1,17 @@
 """
 Views for base information endpoints.
 """
-
-from django.db.models import Avg
-
 from rest_framework import status
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from offers_app.models import Offer
-from profiles_app.models import UserProfile
-from reviews_app.models import Review
+from .filters import (
+    get_average_rating,
+    get_business_profile_count,
+    get_offer_count,
+    get_review_count,
+)
 
 
 class BaseInfoView(APIView):
@@ -33,32 +33,14 @@ class BaseInfoView(APIView):
                 HTTP response containing platform statistics.
         """
 
-        review_count = Review.objects.count()
-
-        average_rating = Review.objects.aggregate(
-            avg=Avg("rating")
-        )["avg"]
-
-        average_rating = (
-            round(average_rating, 1)
-            if average_rating is not None
-            else 0.0
-        )
-
-        business_profile_count = UserProfile.objects.filter(
-            type="business"
-        ).count()
-
-        offer_count = Offer.objects.count()
-
         return Response(
             {
-                "review_count": review_count,
-                "average_rating": average_rating,
+                "review_count": get_review_count(),
+                "average_rating": get_average_rating(),
                 "business_profile_count": (
-                    business_profile_count
+                    get_business_profile_count()
                 ),
-                "offer_count": offer_count,
+                "offer_count": get_offer_count(),
             },
             status=status.HTTP_200_OK,
         )

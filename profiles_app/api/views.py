@@ -8,6 +8,11 @@ from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
 
 from profiles_app.models import UserProfile
+from .filters import (
+    get_business_profiles,
+    get_customer_profiles,
+    get_profile_by_user_pk,
+)
 from .permissions import IsProfileOwner
 
 from .serializers import (
@@ -48,9 +53,7 @@ class ProfileDetailView(APIView):
         """
 
         try:
-            profile = UserProfile.objects.get(
-                user__pk=pk
-            )
+            profile = get_profile_by_user_pk(pk)
 
         except UserProfile.DoesNotExist:
             return Response(
@@ -80,9 +83,7 @@ class ProfileDetailView(APIView):
         """
 
         try:
-            profile = UserProfile.objects.get(
-                user__pk=pk
-            )
+            profile = get_profile_by_user_pk(pk)
 
         except UserProfile.DoesNotExist:
             return Response(
@@ -146,9 +147,7 @@ class BusinessProfilesView(APIView):
                 List of business profiles.
         """
 
-        profiles = UserProfile.objects.filter(
-            type="business"
-        )
+        profiles = get_business_profiles()
 
         serializer = BusinessProfileSerializer(
             profiles,
@@ -178,9 +177,7 @@ class CustomerProfilesView(APIView):
                 List of customer profiles.
         """
 
-        profiles = UserProfile.objects.filter(
-            type="customer"
-        )
+        profiles = get_customer_profiles()
 
         serializer = CustomerProfileSerializer(
             profiles,

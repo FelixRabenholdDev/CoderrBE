@@ -74,7 +74,7 @@ class ReviewsListView(APIView):
         ).exists():
             return Response(
                 {"detail": "Du hast bereits eine Bewertung für diesen Geschäftsbenutzer abgegeben."},
-                status=status.HTTP_403_FORBIDDEN,
+                status=status.HTTP_400_BAD_REQUEST,
             )
 
         serializer.save(reviewer=request.user)

@@ -3,7 +3,6 @@ Views for order management endpoints.
 """
 
 from django.contrib.auth.models import User
-from django.db.models import Q
 
 from rest_framework import status
 from rest_framework.response import Response
@@ -14,6 +13,14 @@ from offers_app.models import OfferDetail
 from orders_app.models import Order
 from core.permissions import IsCustomerUser, IsAdminUser
 from .permissions import IsOrderBusinessUser
+from .filters import (
+    get_business_user_by_pk,
+    get_completed_order_count,
+    get_in_progress_order_count,
+    get_offer_detail_by_pk,
+    get_order_by_pk,
+    get_user_orders,
+)
 
 from .serializers import (
     OrderSerializer,
@@ -49,10 +56,7 @@ class OrdersListView(APIView):
                 List of user-related orders.
         """
 
-        orders = Order.objects.filter(
-            Q(customer_user=request.user)
-            | Q(business_user=request.user)
-        ).order_by("created_at")
+        orders = get_user_orders(request.user)
 
         serializer = OrderSerializer(
             orders,
@@ -96,8 +100,8 @@ class OrdersListView(APIView):
             )
 
         try:
-            offer_detail = OfferDetail.objects.get(
-                pk=offer_detail_id
+            offer_detail = get_offer_detail_by_pk(
+                offer_detail_id
             )
 
         except OfferDetail.DoesNotExist:
@@ -163,7 +167,7 @@ class OrderDetailView(APIView):
         """
 
         try:
-            return Order.objects.get(pk=pk)
+            return get_order_by_pk(pk)
 
         except Order.DoesNotExist:
             return None
@@ -259,8 +263,8 @@ class OrderCountView(APIView):
         """
 
         try:
-            business_user = User.objects.get(
-                pk=business_user_id
+            business_user = get_business_user_by_pk(
+                business_user_id
             )
 
         except User.DoesNotExist:
@@ -274,10 +278,9 @@ class OrderCountView(APIView):
                 status=status.HTTP_404_NOT_FOUND,
             )
 
-        count = Order.objects.filter(
-            business_user=business_user,
-            status="in_progress",
-        ).count()
+        count = get_in_progress_order_count(
+            business_user
+        )
 
         return Response(
             {"order_count": count},
@@ -305,8 +308,8 @@ class CompletedOrderCountView(APIView):
         """
 
         try:
-            business_user = User.objects.get(
-                pk=business_user_id
+            business_user = get_business_user_by_pk(
+                business_user_id
             )
 
         except User.DoesNotExist:
@@ -320,10 +323,9 @@ class CompletedOrderCountView(APIView):
                 status=status.HTTP_404_NOT_FOUND,
             )
 
-        count = Order.objects.filter(
-            business_user=business_user,
-            status="completed",
-        ).count()
+        count = get_completed_order_count(
+            business_user
+        )
 
         return Response(
             {"completed_order_count": count},

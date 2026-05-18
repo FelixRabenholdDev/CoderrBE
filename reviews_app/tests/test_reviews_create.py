@@ -74,6 +74,12 @@ class ReviewsCreateAPITest(APITestCase):
         payload = {k: v for k, v in self.valid_payload.items() if k != "business_user"}
         response = self.client.post(self.url, payload, format="json")
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+    
+    def test_reviews_create_returns_400_if_duplicate_review(self):
+        self.client.credentials(HTTP_AUTHORIZATION="Token " + self.customer_token.key)
+        self.client.post(self.url, self.valid_payload, format="json")
+        response = self.client.post(self.url, self.valid_payload, format="json")
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
     # --- 401 Not authenticated ---
 
@@ -85,11 +91,5 @@ class ReviewsCreateAPITest(APITestCase):
 
     def test_reviews_create_returns_403_if_business_user(self):
         self.client.credentials(HTTP_AUTHORIZATION="Token " + self.business_token.key)
-        response = self.client.post(self.url, self.valid_payload, format="json")
-        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
-
-    def test_reviews_create_returns_403_if_duplicate_review(self):
-        self.client.credentials(HTTP_AUTHORIZATION="Token " + self.customer_token.key)
-        self.client.post(self.url, self.valid_payload, format="json")
         response = self.client.post(self.url, self.valid_payload, format="json")
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
