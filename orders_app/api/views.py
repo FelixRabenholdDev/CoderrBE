@@ -83,11 +83,15 @@ class OrdersListView(APIView):
         if not offer_detail_id:
             return Response(
                 {
-                    "detail": (
-                        "offer_detail_id ist "
-                        "erforderlich."
-                    )
+                    "detail": "offer_detail_id ist erforderlich."                    
                 },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        
+        try:
+            offer_detail_id = int(offer_detail_id)
+        except (ValueError, TypeError):
+            return Response(
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
@@ -227,12 +231,6 @@ class OrderDetailView(APIView):
                 {"detail": "Nicht gefunden."},
                 status=status.HTTP_404_NOT_FOUND,
             )
-
-        # if not request.user.is_staff:
-        #     return Response(
-        #         {"detail": "Keine Berechtigung."},
-        #         status=status.HTTP_403_FORBIDDEN,
-        #     )
 
         order.delete()
 
