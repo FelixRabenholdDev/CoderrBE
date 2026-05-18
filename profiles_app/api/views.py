@@ -5,8 +5,10 @@ Views for profile management endpoints.
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from rest_framework.permissions import IsAuthenticated
 
 from profiles_app.models import UserProfile
+from .permissions import IsProfileOwner
 
 from .serializers import (
     BusinessProfileSerializer,
@@ -20,6 +22,17 @@ class ProfileDetailView(APIView):
     API view for retrieving and updating
     user profiles.
     """
+
+    def get_permissions(self):
+        """
+        Return permissions depending on request method.
+
+        Returns:
+            list: Permission classes for the request.
+        """
+        if self.request.method == "PATCH":
+            return [IsProfileOwner()]
+        return [IsAuthenticated()]
 
     def get(self, request, pk):
         """
@@ -77,11 +90,7 @@ class ProfileDetailView(APIView):
                 status=status.HTTP_404_NOT_FOUND,
             )
 
-        if profile.user != request.user:
-            return Response(
-                {"detail": "Nicht erlaubt."},
-                status=status.HTTP_403_FORBIDDEN,
-            )
+        self.check_object_permissions(request, profile)
 
         user = profile.user
 
