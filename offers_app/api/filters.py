@@ -1,5 +1,8 @@
 from django.db.models import Q
 
+class InvalidFilterError(Exception):
+    """Raised when a filter parameter is invalid."""
+    pass
 
 def filter_offers(queryset, request):
     """
@@ -18,11 +21,17 @@ def filter_offers(queryset, request):
 
     min_price = request.query_params.get("min_price")
     if min_price:
-        queryset = queryset.filter(min_price__gte=min_price)
+        try:
+            queryset = queryset.filter(min_price__gte=float(min_price))
+        except Exception:
+            raise InvalidFilterError()
 
     max_delivery_time = request.query_params.get("max_delivery_time")
     if max_delivery_time:
-        queryset = queryset.filter(min_delivery_time__lte=max_delivery_time)
+        try:
+            queryset = queryset.filter(min_delivery_time__lte=int(max_delivery_time))
+        except Exception:
+            raise InvalidFilterError()
 
     search = request.query_params.get("search")
     if search:

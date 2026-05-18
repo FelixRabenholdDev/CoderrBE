@@ -12,7 +12,7 @@ from rest_framework.views import APIView
 
 from offers_app.models import Offer, OfferDetail
 from core.permissions import IsBusinessUser
-from .filters import filter_offers
+from .filters import filter_offers, InvalidFilterError
 from .permissions import IsOfferOwner
 
 from .serializers import (
@@ -64,7 +64,10 @@ class OffersListView(APIView):
             ),
         ).order_by("created_at")
         
-        queryset = filter_offers(queryset, request)
+        try:
+            queryset = filter_offers(queryset, request)
+        except InvalidFilterError:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
 
         paginator = PageNumberPagination()
 

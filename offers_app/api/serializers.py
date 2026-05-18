@@ -12,6 +12,11 @@ class OfferDetailSerializer(serializers.ModelSerializer):
     Serializer for offer detail objects.
     """
 
+    offer_type = serializers.ChoiceField(
+        choices=["basic", "standard", "premium"],
+        required=True,
+    )
+
     class Meta:
         """
         Meta configuration for OfferDetailSerializer.
@@ -313,6 +318,27 @@ class OfferPatchSerializer(serializers.ModelSerializer):
 
         model = Offer
         fields = ["id", "title", "image", "description", "details"]
+
+    def validate_details(self, value):
+        """
+        Validate that each detail contains offer_type.
+
+        Args:
+            value: List of detail dicts.
+
+        Returns:
+            list: Validated details.
+
+        Raises:
+            serializers.ValidationError:
+                If offer_type is missing.
+        """
+        for detail in value:
+            if "offer_type" not in detail:
+                raise serializers.ValidationError(
+                    "offer_type ist erforderlich."
+                )
+        return value
 
     def update(self, instance, validated_data):
         """

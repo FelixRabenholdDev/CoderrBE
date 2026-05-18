@@ -95,6 +95,23 @@ class OfferPatchAPITest(APITestCase):
         for field in expected_fields:
             self.assertIn(field, response.data)
 
+    # --- 400 Bad Request ---
+
+    def test_offer_patch_fails_if_detail_missing_offer_type(self):
+        payload = {
+            "details": [
+                {
+                    "title": "Basic Updated", "revisions": 3,
+                    "delivery_time_in_days": 6, "price": 120,
+                    "features": ["Logo"]
+                }
+            ]
+        }
+        self.client.credentials(HTTP_AUTHORIZATION="Token " + self.token.key)
+        response = self.client.patch(self.url, payload, format="json")
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+
     # --- 401 Not authenticated ---
 
     def test_offer_patch_returns_401_if_not_authenticated(self):
