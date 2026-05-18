@@ -8,6 +8,8 @@ class IsCustomerUser(BasePermission):
     """
 
     def has_permission(self, request, view):
+        if not request.user or not request.user.is_authenticated:
+            return False
         try:
             profile = UserProfile.objects.get(user=request.user)
             return profile.type == "customer"
@@ -21,6 +23,8 @@ class IsBusinessUser(BasePermission):
     """
 
     def has_permission(self, request, view):
+        if not request.user or not request.user.is_authenticated:
+            return False
         try:
             profile = UserProfile.objects.get(user=request.user)
             return profile.type == "business"
