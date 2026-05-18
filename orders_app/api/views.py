@@ -8,10 +8,12 @@ from django.db.models import Q
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from rest_framework.permissions import IsAuthenticated
 
 from offers_app.models import OfferDetail
 from orders_app.models import Order
-from profiles_app.models import UserProfile
+from core.permissions import IsCustomerUser, IsAdminUser
+from .permissions import IsOrderBusinessUser
 
 from .serializers import (
     OrderSerializer,
@@ -23,6 +25,17 @@ class OrdersListView(APIView):
     """
     API view for listing and creating orders.
     """
+
+    def get_permissions(self):
+        """
+        Return permissions depending on request method.
+
+        Returns:
+            list: Permission classes for the request.
+        """
+        if self.request.method == "POST":
+            return [IsCustomerUser()]
+        return [IsAuthenticated()]
 
     def get(self, request):
         """
@@ -62,32 +75,6 @@ class OrdersListView(APIView):
             Response:
                 Created order data or error message.
         """
-
-        try:
-            profile = UserProfile.objects.get(
-                user=request.user
-            )
-
-            if profile.type != "customer":
-                return Response(
-                    {
-                        "detail": (
-                            "Nur Customer-User dürfen "
-                            "Bestellungen erstellen."
-                        )
-                    },
-                    status=status.HTTP_403_FORBIDDEN,
-                )
-
-        except UserProfile.DoesNotExist:
-            return Response(
-                {
-                    "detail": (
-                        "Profil nicht gefunden."
-                    )
-                },
-                status=status.HTTP_403_FORBIDDEN,
-            )
 
         offer_detail_id = request.data.get(
             "offer_detail_id"
@@ -146,6 +133,19 @@ class OrderDetailView(APIView):
     API view for updating and deleting orders.
     """
 
+    def get_permissions(self):
+        """
+        Return permissions depending on request method.
+
+        Returns:
+            list: Permission classes for the request.
+        """
+        if self.request.method == "PATCH":
+            return [IsOrderBusinessUser()]
+        if self.request.method == "DELETE":
+            return [IsAdminUser()]
+        return []
+
     def get_order(self, pk):
         """
         Retrieve an order by primary key.
@@ -186,37 +186,7 @@ class OrderDetailView(APIView):
                 status=status.HTTP_404_NOT_FOUND,
             )
 
-        try:
-            profile = UserProfile.objects.get(
-                user=request.user
-            )
-
-            if profile.type != "business":
-                return Response(
-                    {
-                        "detail": (
-                            "Nur Business-User dürfen "
-                            "den Status ändern."
-                        )
-                    },
-                    status=status.HTTP_403_FORBIDDEN,
-                )
-
-        except UserProfile.DoesNotExist:
-            return Response(
-                {
-                    "detail": (
-                        "Profil nicht gefunden."
-                    )
-                },
-                status=status.HTTP_403_FORBIDDEN,
-            )
-
-        if order.business_user != request.user:
-            return Response(
-                {"detail": "Nicht erlaubt."},
-                status=status.HTTP_403_FORBIDDEN,
-            )
+        self.check_object_permissions(request, order)
 
         serializer = OrderStatusPatchSerializer(
             order,
@@ -258,11 +228,11 @@ class OrderDetailView(APIView):
                 status=status.HTTP_404_NOT_FOUND,
             )
 
-        if not request.user.is_staff:
-            return Response(
-                {"detail": "Keine Berechtigung."},
-                status=status.HTTP_403_FORBIDDEN,
-            )
+        # if not request.user.is_staff:
+        #     return Response(
+        #         {"detail": "Keine Berechtigung."},
+        #         status=status.HTTP_403_FORBIDDEN,
+        #     )
 
         order.delete()
 
