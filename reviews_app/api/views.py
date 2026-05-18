@@ -3,12 +3,15 @@ Views for review management endpoints.
 """
 
 from rest_framework import status
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from reviews_app.models import Review
-from profiles_app.models import UserProfile
+from core.permissions import IsCustomerUser
+from reviews_app.api.permissions import IsReviewOwner
 
+from .filters import filter_reviews
 from .serializers import (
     ReviewPatchSerializer,
     ReviewSerializer,
@@ -20,11 +23,14 @@ class ReviewsListView(APIView):
     API view for listing and creating reviews.
     """
 
+    def get_permissions(self):
+        if self.request.method == "POST":
+            return [IsCustomerUser()]
+        return [IsAuthenticated()]
+
     def get(self, request):
         """
         Handle GET requests for retrieving reviews.
-
-        Supports filtering and ordering.
 
         Args:
             request: Incoming HTTP request.
@@ -33,45 +39,10 @@ class ReviewsListView(APIView):
             Response:
                 List of reviews.
         """
-
         queryset = Review.objects.all()
-
-        business_user_id = request.query_params.get(
-            "business_user_id"
-        )
-
-        if business_user_id:
-            queryset = queryset.filter(
-                business_user__id=business_user_id
-            )
-
-        reviewer_id = request.query_params.get(
-            "reviewer_id"
-        )
-
-        if reviewer_id:
-            queryset = queryset.filter(
-                reviewer__id=reviewer_id
-            )
-
-        ordering = request.query_params.get(
-            "ordering"
-        )
-
-        if ordering in ["rating", "updated_at"]:
-            queryset = queryset.order_by(ordering)
-        else:
-            queryset = queryset.order_by("updated_at")
-
-        serializer = ReviewSerializer(
-            queryset,
-            many=True,
-        )
-
-        return Response(
-            serializer.data,
-            status=status.HTTP_200_OK,
-        )
+        queryset = filter_reviews(queryset, request)
+        serializer = ReviewSerializer(queryset, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
     def post(self, request):
         """
@@ -84,76 +55,29 @@ class ReviewsListView(APIView):
             Response:
                 Created review or error message.
         """
-
-        try:
-            profile = UserProfile.objects.get(
-                user=request.user
-            )
-
-            if profile.type != "customer":
-                return Response(
-                    {
-                        "detail": (
-                            "Nur Customer-User dürfen "
-                            "Bewertungen erstellen."
-                        )
-                    },
-                    status=status.HTTP_403_FORBIDDEN,
-                )
-
-        except UserProfile.DoesNotExist:
-            return Response(
-                {
-                    "detail": (
-                        "Profil nicht gefunden."
-                    )
-                },
-                status=status.HTTP_403_FORBIDDEN,
-            )
-
-        business_user_id = request.data.get(
-            "business_user"
-        )
-
+        business_user_id = request.data.get("business_user")
         if Review.objects.filter(
             reviewer=request.user,
             business_user__id=business_user_id,
         ).exists():
             return Response(
-                {
-                    "detail": (
-                        "Du hast bereits eine "
-                        "Bewertung für diesen "
-                        "Geschäftsbenutzer abgegeben."
-                    )
-                },
+                {"detail": "Du hast bereits eine Bewertung für diesen Geschäftsbenutzer abgegeben."},
                 status=status.HTTP_403_FORBIDDEN,
             )
 
-        serializer = ReviewSerializer(
-            data=request.data
-        )
-
+        serializer = ReviewSerializer(data=request.data)
         if serializer.is_valid():
-            serializer.save(
-                reviewer=request.user
-            )
-
-            return Response(
-                serializer.data,
-                status=status.HTTP_201_CREATED,
-            )
-
-        return Response(
-            serializer.errors,
-            status=status.HTTP_400_BAD_REQUEST,
-        )
+            serializer.save(reviewer=request.user)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 class ReviewDetailView(APIView):
     """
     API view for updating and deleting reviews.
     """
+
+    permission_classes = [IsReviewOwner]
 
     def get_review(self, pk):
         """
@@ -194,11 +118,7 @@ class ReviewDetailView(APIView):
                 status=status.HTTP_404_NOT_FOUND,
             )
 
-        if review.reviewer != request.user:
-            return Response(
-                {"detail": "Nicht erlaubt."},
-                status=status.HTTP_403_FORBIDDEN,
-            )
+        self.check_object_permissions(request, review)
 
         serializer = ReviewPatchSerializer(
             review,
@@ -240,11 +160,7 @@ class ReviewDetailView(APIView):
                 status=status.HTTP_404_NOT_FOUND,
             )
 
-        if review.reviewer != request.user:
-            return Response(
-                {"detail": "Nicht erlaubt."},
-                status=status.HTTP_403_FORBIDDEN,
-            )
+        self.check_object_permissions(request, review)
 
         review.delete()
 
