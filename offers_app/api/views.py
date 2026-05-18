@@ -2,19 +2,18 @@
 Views for offer management and offer detail endpoints.
 """
 
-from django.db.models import Min, Q
+from django.db.models import Min
 
 from rest_framework import status
 from rest_framework.pagination import PageNumberPagination
-from rest_framework.permissions import (
-    AllowAny,
-    IsAuthenticated,
-)
+from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from offers_app.models import Offer, OfferDetail
-from profiles_app.models import UserProfile
+from core.permissions import IsBusinessUser
+from .filters import filter_offers
+from .permissions import IsOfferOwner
 
 from .serializers import (
     OfferCreateSerializer,
@@ -41,7 +40,7 @@ class OffersListView(APIView):
         if self.request.method == "GET":
             return [AllowAny()]
 
-        return [IsAuthenticated()]
+        return [IsBusinessUser()]
 
     def get(self, request):
         """
@@ -64,55 +63,8 @@ class OffersListView(APIView):
                 "details__delivery_time_in_days"
             ),
         ).order_by("created_at")
-
-        creator_id = request.query_params.get(
-            "creator_id"
-        )
-
-        if creator_id:
-            queryset = queryset.filter(
-                user__id=creator_id
-            )
-
-        min_price = request.query_params.get(
-            "min_price"
-        )
-
-        if min_price:
-            queryset = queryset.filter(
-                min_price__gte=min_price
-            )
-
-        max_delivery_time = request.query_params.get(
-            "max_delivery_time"
-        )
-
-        if max_delivery_time:
-            queryset = queryset.filter(
-                min_delivery_time__lte=max_delivery_time
-            )
-
-        search = request.query_params.get("search")
-
-        if search:
-            queryset = queryset.filter(
-                Q(title__icontains=search)
-                | Q(description__icontains=search)
-            )
-
-        ordering = request.query_params.get(
-            "ordering"
-        )
-
-        if ordering == "min_price":
-            queryset = queryset.order_by(
-                "min_price"
-            )
-
-        elif ordering == "updated_at":
-            queryset = queryset.order_by(
-                "updated_at"
-            )
+        
+        queryset = filter_offers(queryset, request)
 
         paginator = PageNumberPagination()
 
@@ -150,32 +102,6 @@ class OffersListView(APIView):
                 Created offer data or validation errors.
         """
 
-        try:
-            profile = UserProfile.objects.get(
-                user=request.user
-            )
-
-            if profile.type != "business":
-                return Response(
-                    {
-                        "detail": (
-                            "Nur Business-User dürfen "
-                            "Angebote erstellen."
-                        )
-                    },
-                    status=status.HTTP_403_FORBIDDEN,
-                )
-
-        except UserProfile.DoesNotExist:
-            return Response(
-                {
-                    "detail": (
-                        "Profil nicht gefunden."
-                    )
-                },
-                status=status.HTTP_403_FORBIDDEN,
-            )
-
         serializer = OfferCreateSerializer(
             data=request.data
         )
@@ -201,6 +127,8 @@ class OfferDetailView(APIView):
     API view for retrieving, updating,
     and deleting offers.
     """
+
+    permission_classes = [IsOfferOwner]
 
     def get_offer(self, pk):
         """
@@ -272,11 +200,7 @@ class OfferDetailView(APIView):
                 status=status.HTTP_404_NOT_FOUND,
             )
 
-        if offer.user != request.user:
-            return Response(
-                {"detail": "Nicht erlaubt."},
-                status=status.HTTP_403_FORBIDDEN,
-            )
+        self.check_object_permissions(request, offer)
 
         serializer = OfferPatchSerializer(
             offer,
@@ -320,11 +244,7 @@ class OfferDetailView(APIView):
                 status=status.HTTP_404_NOT_FOUND,
             )
 
-        if offer.user != request.user:
-            return Response(
-                {"detail": "Nicht erlaubt."},
-                status=status.HTTP_403_FORBIDDEN,
-            )
+        self.check_object_permissions(request, offer)
 
         offer.delete()
 
