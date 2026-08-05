@@ -32,7 +32,7 @@ ALLOWED_HOSTS = [
 	"34.185.228.147",
 	"localhost",
 	"127.0.0.1",
-	"coderr.felixrabenhold.de",
+	"coderr-api.felixrabenhold.de",
 	]
 
 
@@ -73,16 +73,16 @@ CSRF_TRUSTED_ORIGINS = [
 
   'http://localhost:5500',
 
-  "https://felixrabenhold.de",
+  "https://coderr.felixrabenhold.de",
 
 ]
 
 CORS_ALLOWED_ORIGINS = [
 
-    "https://felixrabenhold.de",
+    "https://coderr.felixrabenhold.de",
 
     "http://127.0.0.1:5500",
-    
+
     "http://localhost:5500",
 
 ]
