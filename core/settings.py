@@ -32,7 +32,7 @@ ALLOWED_HOSTS = [
 	"34.185.228.147",
 	"localhost",
 	"127.0.0.1",
-	"coderrtest.felixrabenhold.de"
+	"coderr.felixrabenhold.de",
 	]
 
 
@@ -59,12 +59,12 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
-    'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'corsheaders.middleware.CorsMiddleware',
+    'django.middleware.clickjacking.XFrameOptionsMiddleware',    
 ]
 
 CSRF_TRUSTED_ORIGINS = [
@@ -72,6 +72,8 @@ CSRF_TRUSTED_ORIGINS = [
   'http://127.0.0.1:5500',
 
   'http://localhost:5500',
+
+  "https://coderr.felixrabenhold.de",
 
 ]
 
