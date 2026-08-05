@@ -64,7 +64,7 @@ MIDDLEWARE = [
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
-    'django.middleware.clickjacking.XFrameOptionsMiddleware',    
+    'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
 CSRF_TRUSTED_ORIGINS = [
@@ -73,13 +73,17 @@ CSRF_TRUSTED_ORIGINS = [
 
   'http://localhost:5500',
 
-  "https://coderr.felixrabenhold.de",
+  "https://felixrabenhold.de",
 
 ]
 
 CORS_ALLOWED_ORIGINS = [
 
-    'https://coderr.felixrabenhold.de',
+    "https://felixrabenhold.de",
+
+    "http://127.0.0.1:5500",
+    
+    "http://localhost:5500",
 
 ]
 
